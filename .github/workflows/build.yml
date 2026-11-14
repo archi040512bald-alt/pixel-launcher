@@ -18,10 +18,19 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      # Вручную скачиваем cmdline-tools, чтобы обойти баг с setup-android
+      - name: Download and Setup Android SDK
+        run: |
+          mkdir -p $HOME/android-sdk/cmdline-tools
+          cd $HOME/android-sdk/cmdline-tools
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip
+          unzip -q cmdline-tools.zip
+          mv cmdline-tools latest
+          cd $HOME/android-sdk
+          echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+          echo "$HOME/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
 
-      - name: Install Android SDK Packages
+      - name: Install SDK Packages
         run: |
           yes | sdkmanager --licenses > /dev/null 2>&1 || true
           sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
@@ -32,6 +41,7 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew || true
 
+      # Сборка через gradle-build-action (не требует наличия файла wrapper)
       - name: Build Debug APK
         uses: gradle/gradle-build-action@v3
         with:
