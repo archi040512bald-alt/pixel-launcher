@@ -18,7 +18,7 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      # Вручную скачиваем cmdline-tools, чтобы обойти баг с setup-android
+      # Вручную скачиваем SDK
       - name: Download and Setup Android SDK
         run: |
           mkdir -p $HOME/android-sdk/cmdline-tools
@@ -38,15 +38,14 @@ jobs:
       - name: Create local.properties
         run: echo "sdk.dir=$ANDROID_HOME" > local.properties
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew || true
-
-      # Сборка через gradle-build-action (не требует наличия файла wrapper)
-      - name: Build Debug APK
-        uses: gradle/gradle-build-action@v3
+      # Используем новый официальный экшен для Gradle
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: 8.5
-          arguments: assembleDebug
+
+      - name: Build Debug APK
+        run: gradle assembleDebug
 
       - name: Upload APK
         if: success()
